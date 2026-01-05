@@ -37,6 +37,7 @@ function ActionsScreen(): React.JSX.Element {
           setApiStatus(`⚠️ Unexpected: ${response.status}`);
         }
       } catch (error) {
+        console.error(error);
         setApiStatus(`❌ Connection failed - is Next.js running?`);
       }
     };
