@@ -1,7 +1,7 @@
 import {StyleSheet, Text, View} from 'react-native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import {NavigationContainer} from '@react-navigation/native';
 import {Ionicons} from '@expo/vector-icons';
+import {NavigationContainer} from '@react-navigation/native';
 import React from 'react';
 import {StatusBar} from 'expo-status-bar';
 
@@ -20,9 +20,33 @@ function CoupleScreen(): React.JSX.Element {
 
 // Actions Screen Component (Main Hub)
 function ActionsScreen(): React.JSX.Element {
+  const [apiStatus, setApiStatus] = React.useState<string>('Testing...');
+
+  React.useEffect(() => {
+    // Test API connection
+    const testApi = async (): Promise<void> => {
+      try {
+        const response = await fetch('http://localhost:3010/api/couple');
+        const data = await response.json();
+
+        if (response.status === 400 && data.error === 'User ID is required') {
+          setApiStatus('✅ Connected! API is reachable.');
+        } else if (response.ok) {
+          setApiStatus('✅ Connected to API!');
+        } else {
+          setApiStatus(`⚠️ Unexpected: ${response.status}`);
+        }
+      } catch (error) {
+        setApiStatus(`❌ Connection failed - is Next.js running?`);
+      }
+    };
+    testApi();
+  }, []);
+
   return (
     <View style={styles.container}>
       <Text style={styles.text}>Actions</Text>
+      <Text style={styles.apiStatus}>{apiStatus}</Text>
       <StatusBar style="auto" />
     </View>
   );
@@ -85,6 +109,11 @@ export default function App(): React.JSX.Element {
 }
 
 const styles = StyleSheet.create({
+  apiStatus: {
+    color: '#666',
+    fontSize: 14,
+    marginTop: 10,
+  },
   container: {
     alignItems: 'center',
     backgroundColor: '#fff',
