@@ -1,6 +1,7 @@
 import {StyleSheet, Text, View} from 'react-native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {NavigationContainer} from '@react-navigation/native';
+import {Ionicons} from '@expo/vector-icons';
 import React from 'react';
 import {StatusBar} from 'expo-status-bar';
 
@@ -61,7 +62,31 @@ function HistoryScreen(): React.JSX.Element {
 export default function App(): React.JSX.Element {
   return (
     <NavigationContainer>
-      <Tab.Navigator>
+      <Tab.Navigator
+        screenOptions={({route}) => ({
+          tabBarIcon: ({focused, color, size}): React.ReactNode => {
+            let iconName: keyof typeof Ionicons.glyphMap;
+
+            if (route.name === 'Home') {
+              iconName = focused ? 'home' : 'home-outline';
+            } else if (route.name === 'Couple') {
+              iconName = focused ? 'heart' : 'heart-outline';
+            } else if (route.name === 'Actions') {
+              iconName = focused ? 'flash' : 'flash-outline';
+            } else if (route.name === 'Price') {
+              iconName = focused ? 'cash' : 'cash-outline';
+            } else if (route.name === 'History') {
+              iconName = focused ? 'time' : 'time-outline';
+            } else {
+              iconName = 'help-circle-outline';
+            }
+
+            return <Ionicons name={iconName} size={size} color={color} />;
+          },
+          tabBarActiveTintColor: 'tomato',
+          tabBarInactiveTintColor: 'gray',
+        })}
+      >
         <Tab.Screen name="Home" component={HomeScreen} />
         <Tab.Screen name="Couple" component={CoupleScreen} />
         <Tab.Screen name="Actions" component={ActionsScreen} />
