@@ -8,16 +8,6 @@ import {StatusBar} from 'expo-status-bar';
 // Create the bottom tab navigator
 const Tab = createBottomTabNavigator();
 
-// Home Screen Component
-function HomeScreen(): React.JSX.Element {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Home</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
-}
-
 // Couple Screen Component
 function CoupleScreen(): React.JSX.Element {
   return (
@@ -28,21 +18,11 @@ function CoupleScreen(): React.JSX.Element {
   );
 }
 
-// Actions Screen Component
+// Actions Screen Component (Main Hub)
 function ActionsScreen(): React.JSX.Element {
   return (
     <View style={styles.container}>
       <Text style={styles.text}>Actions</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
-}
-
-// Price Screen Component
-function PriceScreen(): React.JSX.Element {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Price</Text>
       <StatusBar style="auto" />
     </View>
   );
@@ -58,6 +38,16 @@ function HistoryScreen(): React.JSX.Element {
   );
 }
 
+// Settings Screen Component
+function SettingsScreen(): React.JSX.Element {
+  return (
+    <View style={styles.container}>
+      <Text style={styles.text}>Settings</Text>
+      <StatusBar style="auto" />
+    </View>
+  );
+}
+
 // Main App Component with Navigation
 export default function App(): React.JSX.Element {
   return (
@@ -67,16 +57,14 @@ export default function App(): React.JSX.Element {
           tabBarIcon: ({focused, color, size}): React.ReactNode => {
             let iconName: keyof typeof Ionicons.glyphMap;
 
-            if (route.name === 'Home') {
-              iconName = focused ? 'home' : 'home-outline';
-            } else if (route.name === 'Couple') {
+            if (route.name === 'Couple') {
               iconName = focused ? 'heart' : 'heart-outline';
             } else if (route.name === 'Actions') {
               iconName = focused ? 'flash' : 'flash-outline';
-            } else if (route.name === 'Price') {
-              iconName = focused ? 'cash' : 'cash-outline';
             } else if (route.name === 'History') {
               iconName = focused ? 'time' : 'time-outline';
+            } else if (route.name === 'Settings') {
+              iconName = focused ? 'settings' : 'settings-outline';
             } else {
               iconName = 'help-circle-outline';
             }
@@ -87,11 +75,10 @@ export default function App(): React.JSX.Element {
           tabBarInactiveTintColor: 'gray',
         })}
       >
-        <Tab.Screen name="Home" component={HomeScreen} />
         <Tab.Screen name="Couple" component={CoupleScreen} />
         <Tab.Screen name="Actions" component={ActionsScreen} />
-        <Tab.Screen name="Price" component={PriceScreen} />
         <Tab.Screen name="History" component={HistoryScreen} />
+        <Tab.Screen name="Settings" component={SettingsScreen} />
       </Tab.Navigator>
     </NavigationContainer>
   );
