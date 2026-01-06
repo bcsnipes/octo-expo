@@ -32,7 +32,8 @@ function BalanceScreen(): React.JSX.Element {
                     balance.userOwes
                       ? screenStyles.balanceNegative
                       : screenStyles.balancePositive,
-                  ]}>
+                  ]}
+                >
                   {balance.userOwes ? '-' : '+'}
                   {balance.amount} {balance.unit}
                 </Text>
@@ -53,9 +54,56 @@ function BalanceScreen(): React.JSX.Element {
 
 // Couple Screen Component
 function CoupleScreen(): React.JSX.Element {
+  const partner = {
+    name: 'Yueyue',
+    image: null, // Placeholder for avatar
+    birthday: 'Sept 8',
+    mbti: 'ISFJ',
+    loveLanguages: ['Quality Time', 'Acts of Service', 'Physical Touch'],
+  };
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Couple</Text>
+    <View style={screenStyles.container}>
+      <Text style={screenStyles.screenTitle}>Partner</Text>
+      <ScrollView style={screenStyles.scrollContent}>
+        {/* Partner Card */}
+        <View style={coupleStyles.partnerCard}>
+          {/* Avatar Placeholder */}
+          <View style={coupleStyles.avatarContainer}>
+            <View style={coupleStyles.avatar}>
+              <Text style={coupleStyles.avatarText}>
+                {partner.name.charAt(0)}
+              </Text>
+            </View>
+          </View>
+
+          {/* Name */}
+          <Text style={coupleStyles.partnerName}>{partner.name}</Text>
+
+          {/* Details Grid */}
+          <View style={coupleStyles.detailsGrid}>
+            <View style={coupleStyles.detailItem}>
+              <Text style={coupleStyles.detailLabel}>Birthday</Text>
+              <Text style={coupleStyles.detailValue}>{partner.birthday}</Text>
+            </View>
+            <View style={coupleStyles.detailItem}>
+              <Text style={coupleStyles.detailLabel}>MBTI</Text>
+              <Text style={coupleStyles.detailValue}>{partner.mbti}</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Love Languages Section */}
+        <View style={coupleStyles.section}>
+          <Text style={coupleStyles.sectionTitle}>Love Languages</Text>
+          {partner.loveLanguages.map((language, index) => (
+            <View key={index} style={coupleStyles.languageItem}>
+              <View style={coupleStyles.languageDot} />
+              <Text style={coupleStyles.languageText}>{language}</Text>
+            </View>
+          ))}
+        </View>
+      </ScrollView>
       <StatusBar style="auto" />
     </View>
   );
@@ -308,5 +356,90 @@ const tabStyles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     width: 56,
+  },
+});
+
+// Couple Screen Styles
+const coupleStyles = StyleSheet.create({
+  avatar: {
+    alignItems: 'center',
+    backgroundColor: '#000',
+    borderRadius: 50,
+    height: 100,
+    justifyContent: 'center',
+    width: 100,
+  },
+  avatarContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  avatarText: {
+    color: '#fff',
+    fontSize: 40,
+    fontWeight: '700',
+  },
+  detailItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  detailLabel: {
+    color: '#999',
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+    marginBottom: 6,
+    textTransform: 'uppercase',
+  },
+  detailValue: {
+    color: '#000',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  detailsGrid: {
+    flexDirection: 'row',
+    marginTop: 24,
+  },
+  languageDot: {
+    backgroundColor: '#000',
+    borderRadius: 3,
+    height: 6,
+    marginRight: 12,
+    marginTop: 7,
+    width: 6,
+  },
+  languageItem: {
+    flexDirection: 'row',
+    marginBottom: 12,
+  },
+  languageText: {
+    color: '#000',
+    flex: 1,
+    fontSize: 16,
+    lineHeight: 20,
+  },
+  partnerCard: {
+    backgroundColor: '#fff',
+    borderColor: '#e5e5e5',
+    borderRadius: 20,
+    borderWidth: 1,
+    marginBottom: 24,
+    padding: 32,
+  },
+  partnerName: {
+    color: '#000',
+    fontSize: 28,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  section: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    color: '#999',
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 1,
+    marginBottom: 16,
+    textTransform: 'uppercase',
   },
 });
