@@ -1,4 +1,4 @@
-import {StyleSheet, Text, View} from 'react-native';
+import {ScrollView, StyleSheet, Text, View} from 'react-native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {Ionicons} from '@expo/vector-icons';
 import {NavigationContainer} from '@react-navigation/native';
@@ -7,6 +7,49 @@ import {StatusBar} from 'expo-status-bar';
 
 // Create the bottom tab navigator
 const Tab = createBottomTabNavigator();
+
+// Balance Screen Component
+function BalanceScreen(): React.JSX.Element {
+  const balances = [
+    {id: '1', name: 'Cash', amount: 23, unit: '$', userOwes: true},
+    {id: '2', name: 'Foot Rubs', amount: 1, unit: 'rub', userOwes: false},
+  ];
+
+  const partnerNames = {me: 'You', them: 'Partner'};
+
+  return (
+    <View style={screenStyles.container}>
+      <Text style={screenStyles.screenTitle}>Balance</Text>
+      <ScrollView style={screenStyles.scrollContent}>
+        {balances.map(balance => (
+          <View key={balance.id} style={screenStyles.balanceCard}>
+            <View style={screenStyles.balanceRow}>
+              <Text style={screenStyles.balanceName}>{balance.name}</Text>
+              <View style={screenStyles.balanceAmountContainer}>
+                <Text
+                  style={[
+                    screenStyles.balanceAmount,
+                    balance.userOwes
+                      ? screenStyles.balanceNegative
+                      : screenStyles.balancePositive,
+                  ]}>
+                  {balance.userOwes ? '-' : '+'}
+                  {balance.amount} {balance.unit}
+                </Text>
+              </View>
+            </View>
+            <Text style={screenStyles.balanceSubtext}>
+              {balance.userOwes
+                ? `You owe ${partnerNames.them}`
+                : `${partnerNames.them} owes you`}
+            </Text>
+          </View>
+        ))}
+      </ScrollView>
+      <StatusBar style="auto" />
+    </View>
+  );
+}
 
 // Couple Screen Component
 function CoupleScreen(): React.JSX.Element {
@@ -18,36 +61,14 @@ function CoupleScreen(): React.JSX.Element {
   );
 }
 
-// Actions Screen Component (Main Hub)
-function ActionsScreen(): React.JSX.Element {
-  const [apiStatus, setApiStatus] = React.useState<string>('Testing...');
-
-  React.useEffect(() => {
-    // Test API connection
-    const testApi = async (): Promise<void> => {
-      try {
-        const response = await fetch('http://localhost:3010/api/couple');
-        const data = await response.json();
-
-        if (response.status === 400 && data.error === 'User ID is required') {
-          setApiStatus('✅ Connected! API is reachable.');
-        } else if (response.ok) {
-          setApiStatus('✅ Connected to API!');
-        } else {
-          setApiStatus(`⚠️ Unexpected: ${response.status}`);
-        }
-      } catch (error) {
-        console.error(error);
-        setApiStatus(`❌ Connection failed - is Next.js running?`);
-      }
-    };
-    testApi();
-  }, []);
-
+// Add Infraction Modal Component (triggered by center button)
+function AddInfractionScreen(): React.JSX.Element {
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Actions</Text>
-      <Text style={styles.apiStatus}>{apiStatus}</Text>
+      <Text style={styles.text}>Add Infraction</Text>
+      <Text style={{color: '#666', marginTop: 10}}>
+        Modal will slide up here
+      </Text>
       <StatusBar style="auto" />
     </View>
   );
@@ -55,9 +76,52 @@ function ActionsScreen(): React.JSX.Element {
 
 // History Screen Component
 function HistoryScreen(): React.JSX.Element {
+  const transactions = [
+    {
+      id: '1',
+      penalty: 'Window Dressing',
+      who: 'You',
+      amount: '$5',
+      date: '2 hours ago',
+    },
+    {
+      id: '2',
+      penalty: 'Dishes',
+      who: 'Partner',
+      amount: '$3',
+      date: 'Yesterday',
+    },
+    {
+      id: '3',
+      penalty: 'Window Dressing',
+      who: 'You',
+      amount: '$5',
+      date: '3 days ago',
+    },
+  ];
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>History</Text>
+    <View style={screenStyles.container}>
+      <Text style={screenStyles.screenTitle}>History</Text>
+      <ScrollView style={screenStyles.scrollContent}>
+        {transactions.map(transaction => (
+          <View key={transaction.id} style={screenStyles.transactionCard}>
+            <View style={screenStyles.transactionRow}>
+              <View>
+                <Text style={screenStyles.transactionPenalty}>
+                  {transaction.penalty}
+                </Text>
+                <Text style={screenStyles.transactionMeta}>
+                  {transaction.who} • {transaction.date}
+                </Text>
+              </View>
+              <Text style={screenStyles.transactionAmount}>
+                {transaction.amount}
+              </Text>
+            </View>
+          </View>
+        ))}
+      </ScrollView>
       <StatusBar style="auto" />
     </View>
   );
@@ -79,13 +143,21 @@ export default function App(): React.JSX.Element {
     <NavigationContainer>
       <Tab.Navigator
         screenOptions={({route}) => ({
+          headerShown: false,
           tabBarIcon: ({focused, color, size}): React.ReactNode => {
             let iconName: keyof typeof Ionicons.glyphMap;
 
-            if (route.name === 'Couple') {
+            if (route.name === 'Balance') {
+              iconName = focused ? 'wallet' : 'wallet-outline';
+            } else if (route.name === 'Couple') {
               iconName = focused ? 'heart' : 'heart-outline';
-            } else if (route.name === 'Actions') {
-              iconName = focused ? 'flash' : 'flash-outline';
+            } else if (route.name === 'Add') {
+              // Center button - special styling
+              return (
+                <View style={tabStyles.centerButton}>
+                  <Ionicons name="add" size={28} color="#fff" />
+                </View>
+              );
             } else if (route.name === 'History') {
               iconName = focused ? 'time' : 'time-outline';
             } else if (route.name === 'Settings') {
@@ -96,12 +168,26 @@ export default function App(): React.JSX.Element {
 
             return <Ionicons name={iconName} size={size} color={color} />;
           },
-          tabBarActiveTintColor: 'tomato',
-          tabBarInactiveTintColor: 'gray',
+          tabBarActiveTintColor: '#000',
+          tabBarInactiveTintColor: '#999',
+          tabBarStyle: {
+            borderTopColor: '#f0f0f0',
+            borderTopWidth: 1,
+            height: 88,
+            paddingBottom: 34,
+            paddingTop: 8,
+          },
         })}
       >
+        <Tab.Screen name="Balance" component={BalanceScreen} />
         <Tab.Screen name="Couple" component={CoupleScreen} />
-        <Tab.Screen name="Actions" component={ActionsScreen} />
+        <Tab.Screen
+          name="Add"
+          component={AddInfractionScreen}
+          options={{
+            tabBarLabel: '',
+          }}
+        />
         <Tab.Screen name="History" component={HistoryScreen} />
         <Tab.Screen name="Settings" component={SettingsScreen} />
       </Tab.Navigator>
@@ -110,11 +196,6 @@ export default function App(): React.JSX.Element {
 }
 
 const styles = StyleSheet.create({
-  apiStatus: {
-    color: '#666',
-    fontSize: 14,
-    marginTop: 10,
-  },
   container: {
     alignItems: 'center',
     backgroundColor: '#fff',
@@ -122,7 +203,110 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   text: {
+    color: '#000',
     fontSize: 24,
     fontWeight: 'bold',
+  },
+});
+
+// Screen Styles - Clean & Minimal
+const screenStyles = StyleSheet.create({
+  balanceAmount: {
+    fontSize: 28,
+    fontWeight: '700',
+  },
+  balanceAmountContainer: {
+    flexDirection: 'row',
+  },
+  balanceCard: {
+    backgroundColor: '#fafafa',
+    borderRadius: 16,
+    marginBottom: 16,
+    padding: 20,
+  },
+  balanceName: {
+    color: '#666',
+    fontSize: 13,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  balanceNegative: {
+    color: '#ef4444',
+  },
+  balancePositive: {
+    color: '#10b981',
+  },
+  balanceRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  balanceSubtext: {
+    color: '#999',
+    fontSize: 14,
+  },
+  container: {
+    backgroundColor: '#fff',
+    flex: 1,
+  },
+  screenTitle: {
+    color: '#000',
+    fontSize: 32,
+    fontWeight: '700',
+    marginBottom: 24,
+    marginTop: 60,
+    paddingHorizontal: 20,
+  },
+  scrollContent: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  transactionAmount: {
+    color: '#000',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  transactionCard: {
+    borderBottomColor: '#f0f0f0',
+    borderBottomWidth: 1,
+    paddingVertical: 16,
+  },
+  transactionMeta: {
+    color: '#999',
+    fontSize: 13,
+    marginTop: 4,
+  },
+  transactionPenalty: {
+    color: '#000',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  transactionRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+});
+
+// Tab Bar Styles
+const tabStyles = StyleSheet.create({
+  centerButton: {
+    alignItems: 'center',
+    backgroundColor: '#000',
+    borderRadius: 28,
+    elevation: 4,
+    height: 56,
+    justifyContent: 'center',
+    marginTop: -28,
+    shadowColor: '#000',
+    shadowOffset: {
+      height: 2,
+      width: 0,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    width: 56,
   },
 });
