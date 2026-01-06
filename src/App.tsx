@@ -175,11 +175,70 @@ function HistoryScreen(): React.JSX.Element {
   );
 }
 
-// Settings Screen Component
-function SettingsScreen(): React.JSX.Element {
+// Setup Screen Component (Penalties & Price Types)
+function SetupScreen(): React.JSX.Element {
+  const penalties = [
+    {id: '1', name: 'Window Dressing', priceCount: 1},
+    {id: '2', name: 'Dishes', priceCount: 2},
+    {id: '3', name: 'Late to Dinner', priceCount: 1},
+  ];
+
+  const priceTypes = [
+    {id: '1', name: 'Cash', unit: '$'},
+    {id: '2', name: 'Foot Rubs', unit: 'rub'},
+  ];
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Settings</Text>
+    <View style={screenStyles.container}>
+      {/* Header with Settings Icon */}
+      <View style={setupStyles.header}>
+        <Text style={setupStyles.headerTitle}>Setup</Text>
+        <View style={setupStyles.settingsIcon}>
+          <Ionicons name="settings-outline" size={24} color="#000" />
+        </View>
+      </View>
+
+      <ScrollView style={setupStyles.scrollContent}>
+        {/* Penalties Section */}
+        <View style={setupStyles.section}>
+          <Text style={setupStyles.sectionTitle}>Penalties</Text>
+          {penalties.map(penalty => (
+            <View key={penalty.id} style={setupStyles.listItem}>
+              <View style={setupStyles.listItemContent}>
+                <Text style={setupStyles.listItemTitle}>{penalty.name}</Text>
+                <Text style={setupStyles.listItemSubtitle}>
+                  {penalty.priceCount} price{penalty.priceCount > 1 ? 's' : ''}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#999" />
+            </View>
+          ))}
+          <View style={setupStyles.addButton}>
+            <Ionicons name="add-circle-outline" size={20} color="#000" />
+            <Text style={setupStyles.addButtonText}>Add Penalty</Text>
+          </View>
+        </View>
+
+        {/* Price Types Section */}
+        <View style={setupStyles.section}>
+          <Text style={setupStyles.sectionTitle}>Price Types</Text>
+          {priceTypes.map(priceType => (
+            <View key={priceType.id} style={setupStyles.listItem}>
+              <View style={setupStyles.listItemContent}>
+                <Text style={setupStyles.listItemTitle}>{priceType.name}</Text>
+                <Text style={setupStyles.listItemSubtitle}>
+                  Unit: {priceType.unit}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#999" />
+            </View>
+          ))}
+          <View style={setupStyles.addButton}>
+            <Ionicons name="add-circle-outline" size={20} color="#000" />
+            <Text style={setupStyles.addButtonText}>Add Price Type</Text>
+          </View>
+        </View>
+      </ScrollView>
       <StatusBar style="auto" />
     </View>
   );
@@ -208,8 +267,8 @@ export default function App(): React.JSX.Element {
               );
             } else if (route.name === 'History') {
               iconName = focused ? 'time' : 'time-outline';
-            } else if (route.name === 'Settings') {
-              iconName = focused ? 'settings' : 'settings-outline';
+            } else if (route.name === 'Setup') {
+              iconName = focused ? 'list' : 'list-outline';
             } else {
               iconName = 'help-circle-outline';
             }
@@ -237,7 +296,7 @@ export default function App(): React.JSX.Element {
           }}
         />
         <Tab.Screen name="History" component={HistoryScreen} />
-        <Tab.Screen name="Settings" component={SettingsScreen} />
+        <Tab.Screen name="Setup" component={SetupScreen} />
       </Tab.Navigator>
     </NavigationContainer>
   );
@@ -356,6 +415,80 @@ const tabStyles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     width: 56,
+  },
+});
+
+// Setup Screen Styles
+const setupStyles = StyleSheet.create({
+  addButton: {
+    alignItems: 'center',
+    backgroundColor: '#fafafa',
+    borderColor: '#e5e5e5',
+    borderRadius: 12,
+    borderWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 12,
+    paddingVertical: 16,
+  },
+  addButtonText: {
+    color: '#000',
+    fontSize: 16,
+    fontWeight: '500',
+    marginLeft: 8,
+  },
+  header: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 24,
+    marginTop: 60,
+    paddingHorizontal: 20,
+  },
+  headerTitle: {
+    color: '#000',
+    fontSize: 32,
+    fontWeight: '700',
+  },
+  listItem: {
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderBottomColor: '#f0f0f0',
+    borderBottomWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+  },
+  listItemContent: {
+    flex: 1,
+  },
+  listItemSubtitle: {
+    color: '#999',
+    fontSize: 13,
+    marginTop: 2,
+  },
+  listItemTitle: {
+    color: '#000',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  scrollContent: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  section: {
+    marginBottom: 32,
+  },
+  sectionTitle: {
+    color: '#999',
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 1,
+    marginBottom: 12,
+    textTransform: 'uppercase',
+  },
+  settingsIcon: {
+    padding: 8,
   },
 });
 
