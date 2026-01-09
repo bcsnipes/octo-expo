@@ -118,14 +118,11 @@ function CoupleScreen(): React.JSX.Element {
   );
 }
 
-// Add Infraction Modal Component (triggered by center button)
+// Add Infraction Screen (Placeholder - modal opens on tab press)
 function AddInfractionScreen(): React.JSX.Element {
   return (
     <View style={styles.container}>
       <Text style={styles.text}>Add Infraction</Text>
-      <Text style={{color: '#666', marginTop: 10}}>
-        Modal will slide up here
-      </Text>
       <StatusBar style="auto" />
     </View>
   );
@@ -246,7 +243,13 @@ function SetupScreen(): React.JSX.Element {
     setAddPriceModalVisible(true);
   };
 
-  const openEditPriceModal = (priceType: any): void => {
+  const openEditPriceModal = (priceType: {
+    id: string;
+    name: string;
+    label: string;
+    labelPosition: string;
+    description?: string;
+  }): void => {
     setEditingPriceId(priceType.id);
     setPriceName(priceType.name);
     setPriceLabel(priceType.label || '');
@@ -315,7 +318,13 @@ function SetupScreen(): React.JSX.Element {
     setAddPenaltyModalVisible(true);
   };
 
-  const openEditPenaltyModal = (penalty: any): void => {
+  const openEditPenaltyModal = (penalty: {
+    id: string;
+    name: string;
+    description?: string;
+    price: number;
+    currencyId: string;
+  }): void => {
     setEditingPenaltyId(penalty.id);
     setPenaltyName(penalty.name);
     setPenaltyDescription(penalty.description || '');
@@ -801,6 +810,71 @@ function SetupScreen(): React.JSX.Element {
 
 // Main App Component with Navigation
 export default function App(): React.JSX.Element {
+  const [addInfractionModalOpen, setAddInfractionModalOpen] =
+    React.useState<boolean>(false);
+  const [penaltyPickerVisible, setPenaltyPickerVisible] =
+    React.useState<boolean>(false);
+  const [selectedInfractionPenaltyId, setSelectedInfractionPenaltyId] =
+    React.useState<string>('');
+  const [infractionCommitter, setInfractionCommitter] =
+    React.useState<string>('');
+  const [infractionNotesGlobal, setInfractionNotesGlobal] =
+    React.useState<string>('');
+
+  // Dummy data - same as in SetupScreen
+  const penalties = [
+    {
+      id: '1',
+      name: 'Window Dressing',
+      description: 'Leaving clothes around',
+      price: 5,
+      currencyId: '1',
+    },
+    {
+      id: '2',
+      name: 'Dishes',
+      description: 'Not doing dishes',
+      price: 3,
+      currencyId: '1',
+    },
+  ];
+
+  const priceTypes = [
+    {id: '1', name: 'Cash', label: '$', labelPosition: 'before'},
+    {id: '2', name: 'Foot Rubs', label: 'rub', labelPosition: 'after'},
+  ];
+
+  const handleOpenInfractionModal = (): void => {
+    setSelectedInfractionPenaltyId('');
+    setInfractionCommitter('');
+    setInfractionNotesGlobal('');
+    setAddInfractionModalOpen(true);
+  };
+
+  const handleSaveInfractionGlobal = (): void => {
+    if (!selectedInfractionPenaltyId || !infractionCommitter) {
+      return;
+    }
+
+    console.log('Infraction saved:', {
+      penalty: selectedInfractionPenaltyId,
+      who: infractionCommitter,
+      notes: infractionNotesGlobal,
+    });
+
+    setSelectedInfractionPenaltyId('');
+    setInfractionCommitter('');
+    setInfractionNotesGlobal('');
+    setAddInfractionModalOpen(false);
+  };
+
+  const handleCancelInfractionGlobal = (): void => {
+    setSelectedInfractionPenaltyId('');
+    setInfractionCommitter('');
+    setInfractionNotesGlobal('');
+    setAddInfractionModalOpen(false);
+  };
+
   return (
     <NavigationContainer>
       <Tab.Navigator
@@ -849,10 +923,231 @@ export default function App(): React.JSX.Element {
           options={{
             tabBarLabel: '',
           }}
+          listeners={{
+            tabPress: e => {
+              e.preventDefault(); // Don't navigate
+              handleOpenInfractionModal(); // Open modal instead
+            },
+          }}
         />
         <Tab.Screen name="History" component={HistoryScreen} />
         <Tab.Screen name="Setup" component={SetupScreen} />
       </Tab.Navigator>
+
+      {/* Add Infraction Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={addInfractionModalOpen}
+        onRequestClose={handleCancelInfractionGlobal}
+      >
+        <View style={modalStyles.modalOverlay}>
+          <View style={modalStyles.modalContent}>
+            {/* Modal Header */}
+            <View style={modalStyles.modalHeader}>
+              <Text style={modalStyles.modalTitle}>Log Infraction</Text>
+              <Pressable onPress={handleCancelInfractionGlobal}>
+                <Ionicons name="close" size={28} color="#000" />
+              </Pressable>
+            </View>
+
+            {/* Form Content */}
+            <ScrollView style={modalStyles.modalBody}>
+              <View style={formStyles.formContainer}>
+                {/* Penalty Selection - Tap to open slide-over */}
+                <View style={formStyles.fieldGroup}>
+                  <Text style={formStyles.fieldLabel}>
+                    Penalty <Text style={formStyles.required}>*</Text>
+                  </Text>
+                  <Pressable
+                    style={formStyles.selectRow}
+                    onPress={() => setPenaltyPickerVisible(true)}
+                  >
+                    <Text
+                      style={[
+                        formStyles.selectRowText,
+                        !selectedInfractionPenaltyId &&
+                          formStyles.selectRowPlaceholder,
+                      ]}
+                    >
+                      {selectedInfractionPenaltyId
+                        ? penalties.find(
+                            p => p.id === selectedInfractionPenaltyId
+                          )?.name
+                        : 'Select penalty'}
+                    </Text>
+                    <Ionicons name="chevron-forward" size={20} color="#999" />
+                  </Pressable>
+                  {selectedInfractionPenaltyId && (
+                    <Text style={formStyles.fieldHint}>
+                      {
+                        penalties.find(
+                          p => p.id === selectedInfractionPenaltyId
+                        )?.price
+                      }{' '}
+                      {
+                        priceTypes.find(
+                          pt =>
+                            pt.id ===
+                            penalties.find(
+                              p => p.id === selectedInfractionPenaltyId
+                            )?.currencyId
+                        )?.label
+                      }
+                    </Text>
+                  )}
+                </View>
+
+                {/* Who Committed It - Large Buttons */}
+                <View style={formStyles.fieldGroup}>
+                  <Text style={formStyles.fieldLabel}>
+                    Who <Text style={formStyles.required}>*</Text>
+                  </Text>
+                  <View style={formStyles.largeButtonGroup}>
+                    <Pressable
+                      style={[
+                        formStyles.largeButton,
+                        infractionCommitter === 'me' &&
+                          formStyles.largeButtonSelected,
+                      ]}
+                      onPress={() => setInfractionCommitter('me')}
+                    >
+                      <Text
+                        style={[
+                          formStyles.largeButtonText,
+                          infractionCommitter === 'me' &&
+                            formStyles.largeButtonTextSelected,
+                        ]}
+                      >
+                        You
+                      </Text>
+                    </Pressable>
+
+                    <Pressable
+                      style={[
+                        formStyles.largeButton,
+                        infractionCommitter === 'partner' &&
+                          formStyles.largeButtonSelected,
+                      ]}
+                      onPress={() => setInfractionCommitter('partner')}
+                    >
+                      <Text
+                        style={[
+                          formStyles.largeButtonText,
+                          infractionCommitter === 'partner' &&
+                            formStyles.largeButtonTextSelected,
+                        ]}
+                      >
+                        Partner
+                      </Text>
+                    </Pressable>
+                  </View>
+                </View>
+
+                {/* Notes Field */}
+                <View style={formStyles.fieldGroup}>
+                  <Text style={formStyles.fieldLabel}>Notes</Text>
+                  <TextInput
+                    style={[formStyles.textInput, formStyles.textArea]}
+                    placeholder="Optional notes"
+                    placeholderTextColor="#999"
+                    value={infractionNotesGlobal}
+                    onChangeText={setInfractionNotesGlobal}
+                    multiline
+                    numberOfLines={3}
+                  />
+                </View>
+              </View>
+            </ScrollView>
+
+            {/* Action Buttons */}
+            <View style={formStyles.buttonContainer}>
+              <Pressable
+                style={formStyles.cancelButton}
+                onPress={handleCancelInfractionGlobal}
+              >
+                <Text style={formStyles.cancelButtonText}>Cancel</Text>
+              </Pressable>
+              <Pressable
+                style={[
+                  formStyles.saveButton,
+                  (!selectedInfractionPenaltyId || !infractionCommitter) &&
+                    formStyles.saveButtonDisabled,
+                ]}
+                onPress={handleSaveInfractionGlobal}
+                disabled={!selectedInfractionPenaltyId || !infractionCommitter}
+              >
+                <Text style={formStyles.saveButtonText}>Confirm</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Penalty Picker Slide-Over */}
+      <Modal
+        animationType="slide"
+        transparent={false}
+        visible={penaltyPickerVisible}
+        onRequestClose={() => setPenaltyPickerVisible(false)}
+        presentationStyle="pageSheet"
+      >
+        <View style={slideOverStyles.container}>
+          {/* Header */}
+          <View style={slideOverStyles.header}>
+            <Pressable
+              style={slideOverStyles.backButton}
+              onPress={() => setPenaltyPickerVisible(false)}
+            >
+              <Ionicons name="chevron-back" size={28} color="#007AFF" />
+              <Text style={slideOverStyles.backText}>Back</Text>
+            </Pressable>
+            <Text style={slideOverStyles.title}>Select Penalty</Text>
+            <View style={slideOverStyles.backButton} />
+          </View>
+
+          {/* Penalty List */}
+          <ScrollView style={slideOverStyles.content}>
+            {penalties.map(penalty => {
+              const currency = priceTypes.find(
+                p => p.id === penalty.currencyId
+              );
+              const isSelected = selectedInfractionPenaltyId === penalty.id;
+
+              return (
+                <Pressable
+                  key={penalty.id}
+                  style={[
+                    slideOverStyles.listItem,
+                    isSelected && slideOverStyles.listItemSelected,
+                  ]}
+                  onPress={() => {
+                    setSelectedInfractionPenaltyId(penalty.id);
+                    setPenaltyPickerVisible(false);
+                  }}
+                >
+                  <View style={slideOverStyles.listItemContent}>
+                    <Text style={slideOverStyles.listItemTitle}>
+                      {penalty.name}
+                    </Text>
+                    <Text style={slideOverStyles.listItemSubtitle}>
+                      {penalty.description}
+                    </Text>
+                  </View>
+                  <View style={slideOverStyles.listItemRight}>
+                    <Text style={slideOverStyles.listItemPrice}>
+                      {penalty.price} {currency?.label || ''}
+                    </Text>
+                    {isSelected && (
+                      <Ionicons name="checkmark" size={24} color="#007AFF" />
+                    )}
+                  </View>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </View>
+      </Modal>
     </NavigationContainer>
   );
 }
@@ -1331,6 +1626,129 @@ const formStyles = StyleSheet.create({
   pickerLabel: {
     color: '#000',
     fontSize: 16,
+  },
+  pickerLabelContainer: {
+    flex: 1,
     marginLeft: 12,
+  },
+  pickerSubtitle: {
+    color: '#999',
+    fontSize: 13,
+    marginTop: 2,
+  },
+  selectRow: {
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    borderColor: '#e5e5e5',
+    borderRadius: 12,
+    borderWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+  },
+  selectRowText: {
+    color: '#000',
+    fontSize: 16,
+  },
+  selectRowPlaceholder: {
+    color: '#999',
+  },
+  largeButtonGroup: {
+    gap: 12,
+  },
+  largeButton: {
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    borderColor: '#e5e5e5',
+    borderRadius: 12,
+    borderWidth: 2,
+    paddingVertical: 20,
+  },
+  largeButtonSelected: {
+    backgroundColor: '#f0f0f0',
+    borderColor: '#000',
+  },
+  largeButtonText: {
+    color: '#000',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  largeButtonTextSelected: {
+    color: '#000',
+  },
+});
+
+// Slide-Over Styles (for penalty picker)
+const slideOverStyles = StyleSheet.create({
+  container: {
+    backgroundColor: '#fff',
+    flex: 1,
+  },
+  header: {
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderBottomColor: '#e5e5e5',
+    borderBottomWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 60,
+    paddingBottom: 16,
+  },
+  backButton: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    width: 80,
+  },
+  backText: {
+    color: '#007AFF',
+    fontSize: 17,
+    marginLeft: 4,
+  },
+  title: {
+    color: '#000',
+    fontSize: 17,
+    fontWeight: '600',
+  },
+  content: {
+    flex: 1,
+  },
+  listItem: {
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderBottomColor: '#e5e5e5',
+    borderBottomWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  listItemSelected: {
+    backgroundColor: '#f5f5f5',
+  },
+  listItemContent: {
+    flex: 1,
+    marginRight: 12,
+  },
+  listItemTitle: {
+    color: '#000',
+    fontSize: 17,
+    fontWeight: '500',
+    marginBottom: 4,
+  },
+  listItemSubtitle: {
+    color: '#999',
+    fontSize: 14,
+  },
+  listItemRight: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 12,
+  },
+  listItemPrice: {
+    color: '#666',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
