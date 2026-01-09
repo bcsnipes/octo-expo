@@ -194,6 +194,14 @@ function SetupScreen(): React.JSX.Element {
     React.useState<boolean>(false);
   const [isDarkMode, setIsDarkMode] = React.useState<boolean>(false);
 
+  // Edit mode state
+  const [editingPriceId, setEditingPriceId] = React.useState<string | null>(
+    null
+  );
+  const [editingPenaltyId, setEditingPenaltyId] = React.useState<string | null>(
+    null
+  );
+
   // Add Price Type form state
   const [priceName, setPriceName] = React.useState<string>('');
   const [priceLabel, setPriceLabel] = React.useState<string>('');
@@ -229,22 +237,58 @@ function SetupScreen(): React.JSX.Element {
     {id: '2', name: 'Foot Rubs', label: 'rub', labelPosition: 'after'},
   ]);
 
+  const openAddPriceModal = (): void => {
+    setEditingPriceId(null);
+    setPriceName('');
+    setPriceLabel('');
+    setLabelPosition('after');
+    setPriceDescription('');
+    setAddPriceModalVisible(true);
+  };
+
+  const openEditPriceModal = (priceType: any): void => {
+    setEditingPriceId(priceType.id);
+    setPriceName(priceType.name);
+    setPriceLabel(priceType.label || '');
+    setLabelPosition(priceType.labelPosition);
+    setPriceDescription(priceType.description || '');
+    setAddPriceModalVisible(true);
+  };
+
   const handleSavePriceType = (): void => {
     if (!priceName.trim()) {
       return; // Don't save if name is empty
     }
 
-    const newPriceType = {
-      id: String(priceTypes.length + 1),
-      name: priceName,
-      label: priceLabel || priceName,
-      labelPosition: labelPosition,
-      description: priceDescription,
-    };
-
-    setPriceTypes([...priceTypes, newPriceType]);
+    if (editingPriceId) {
+      // Update existing price type
+      setPriceTypes(
+        priceTypes.map(pt =>
+          pt.id === editingPriceId
+            ? {
+                ...pt,
+                name: priceName,
+                label: priceLabel || priceName,
+                labelPosition: labelPosition,
+                description: priceDescription,
+              }
+            : pt
+        )
+      );
+    } else {
+      // Create new price type
+      const newPriceType = {
+        id: String(priceTypes.length + 1),
+        name: priceName,
+        label: priceLabel || priceName,
+        labelPosition: labelPosition,
+        description: priceDescription,
+      };
+      setPriceTypes([...priceTypes, newPriceType]);
+    }
 
     // Reset form
+    setEditingPriceId(null);
     setPriceName('');
     setPriceLabel('');
     setLabelPosition('after');
@@ -254,6 +298,7 @@ function SetupScreen(): React.JSX.Element {
 
   const handleCancelPriceType = (): void => {
     // Reset form
+    setEditingPriceId(null);
     setPriceName('');
     setPriceLabel('');
     setLabelPosition('after');
@@ -261,22 +306,58 @@ function SetupScreen(): React.JSX.Element {
     setAddPriceModalVisible(false);
   };
 
+  const openAddPenaltyModal = (): void => {
+    setEditingPenaltyId(null);
+    setPenaltyName('');
+    setPenaltyDescription('');
+    setPenaltyPrice('');
+    setPenaltyCurrencyId('');
+    setAddPenaltyModalVisible(true);
+  };
+
+  const openEditPenaltyModal = (penalty: any): void => {
+    setEditingPenaltyId(penalty.id);
+    setPenaltyName(penalty.name);
+    setPenaltyDescription(penalty.description || '');
+    setPenaltyPrice(String(penalty.price));
+    setPenaltyCurrencyId(penalty.currencyId);
+    setAddPenaltyModalVisible(true);
+  };
+
   const handleSavePenalty = (): void => {
     if (!penaltyName.trim() || !penaltyPrice || !penaltyCurrencyId) {
       return; // Don't save if required fields are empty
     }
 
-    const newPenalty = {
-      id: String(penalties.length + 1),
-      name: penaltyName,
-      description: penaltyDescription,
-      price: parseInt(penaltyPrice, 10),
-      currencyId: penaltyCurrencyId,
-    };
-
-    setPenalties([...penalties, newPenalty]);
+    if (editingPenaltyId) {
+      // Update existing penalty
+      setPenalties(
+        penalties.map(p =>
+          p.id === editingPenaltyId
+            ? {
+                ...p,
+                name: penaltyName,
+                description: penaltyDescription,
+                price: parseInt(penaltyPrice, 10),
+                currencyId: penaltyCurrencyId,
+              }
+            : p
+        )
+      );
+    } else {
+      // Create new penalty
+      const newPenalty = {
+        id: String(penalties.length + 1),
+        name: penaltyName,
+        description: penaltyDescription,
+        price: parseInt(penaltyPrice, 10),
+        currencyId: penaltyCurrencyId,
+      };
+      setPenalties([...penalties, newPenalty]);
+    }
 
     // Reset form
+    setEditingPenaltyId(null);
     setPenaltyName('');
     setPenaltyDescription('');
     setPenaltyPrice('');
@@ -286,6 +367,7 @@ function SetupScreen(): React.JSX.Element {
 
   const handleCancelPenalty = (): void => {
     // Reset form
+    setEditingPenaltyId(null);
     setPenaltyName('');
     setPenaltyDescription('');
     setPenaltyPrice('');
@@ -313,20 +395,23 @@ function SetupScreen(): React.JSX.Element {
           {penalties.map(penalty => {
             const currency = priceTypes.find(p => p.id === penalty.currencyId);
             return (
-              <View key={penalty.id} style={setupStyles.listItem}>
+              <Pressable
+                key={penalty.id}
+                style={setupStyles.listItem}
+                onPress={() => openEditPenaltyModal(penalty)}
+              >
                 <View style={setupStyles.listItemContent}>
                   <Text style={setupStyles.listItemTitle}>{penalty.name}</Text>
                   <Text style={setupStyles.listItemSubtitle}>
                     {penalty.price} {currency?.label || ''}
                   </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={20} color="#999" />
-              </View>
+              </Pressable>
             );
           })}
           <Pressable
             style={setupStyles.addButton}
-            onPress={() => setAddPenaltyModalVisible(true)}
+            onPress={openAddPenaltyModal}
           >
             <Ionicons name="add-circle-outline" size={20} color="#000" />
             <Text style={setupStyles.addButtonText}>Add Penalty</Text>
@@ -337,20 +422,20 @@ function SetupScreen(): React.JSX.Element {
         <View style={setupStyles.section}>
           <Text style={setupStyles.sectionTitle}>Price Types</Text>
           {priceTypes.map(priceType => (
-            <View key={priceType.id} style={setupStyles.listItem}>
+            <Pressable
+              key={priceType.id}
+              style={setupStyles.listItem}
+              onPress={() => openEditPriceModal(priceType)}
+            >
               <View style={setupStyles.listItemContent}>
                 <Text style={setupStyles.listItemTitle}>{priceType.name}</Text>
                 <Text style={setupStyles.listItemSubtitle}>
                   Label: {priceType.label} ({priceType.labelPosition})
                 </Text>
               </View>
-              <Ionicons name="chevron-forward" size={20} color="#999" />
-            </View>
+            </Pressable>
           ))}
-          <Pressable
-            style={setupStyles.addButton}
-            onPress={() => setAddPriceModalVisible(true)}
-          >
+          <Pressable style={setupStyles.addButton} onPress={openAddPriceModal}>
             <Ionicons name="add-circle-outline" size={20} color="#000" />
             <Text style={setupStyles.addButtonText}>Add Price Type</Text>
           </Pressable>
@@ -452,7 +537,9 @@ function SetupScreen(): React.JSX.Element {
           <View style={modalStyles.modalContent}>
             {/* Modal Header */}
             <View style={modalStyles.modalHeader}>
-              <Text style={modalStyles.modalTitle}>Add Price Type</Text>
+              <Text style={modalStyles.modalTitle}>
+                {editingPriceId ? 'Edit Price Type' : 'Add Price Type'}
+              </Text>
               <Pressable onPress={handleCancelPriceType}>
                 <Ionicons name="close" size={28} color="#000" />
               </Pressable>
@@ -585,7 +672,9 @@ function SetupScreen(): React.JSX.Element {
           <View style={modalStyles.modalContent}>
             {/* Modal Header */}
             <View style={modalStyles.modalHeader}>
-              <Text style={modalStyles.modalTitle}>Add Penalty</Text>
+              <Text style={modalStyles.modalTitle}>
+                {editingPenaltyId ? 'Edit Penalty' : 'Add Penalty'}
+              </Text>
               <Pressable onPress={handleCancelPenalty}>
                 <Ionicons name="close" size={28} color="#000" />
               </Pressable>
