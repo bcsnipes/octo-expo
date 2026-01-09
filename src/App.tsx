@@ -190,6 +190,8 @@ function SetupScreen(): React.JSX.Element {
     React.useState<boolean>(false);
   const [addPriceModalVisible, setAddPriceModalVisible] =
     React.useState<boolean>(false);
+  const [addPenaltyModalVisible, setAddPenaltyModalVisible] =
+    React.useState<boolean>(false);
   const [isDarkMode, setIsDarkMode] = React.useState<boolean>(false);
 
   // Add Price Type form state
@@ -198,11 +200,29 @@ function SetupScreen(): React.JSX.Element {
   const [labelPosition, setLabelPosition] = React.useState<string>('after');
   const [priceDescription, setPriceDescription] = React.useState<string>('');
 
-  const penalties = [
-    {id: '1', name: 'Window Dressing', priceCount: 1},
-    {id: '2', name: 'Dishes', priceCount: 2},
-    {id: '3', name: 'Late to Dinner', priceCount: 1},
-  ];
+  // Add Penalty form state
+  const [penaltyName, setPenaltyName] = React.useState<string>('');
+  const [penaltyDescription, setPenaltyDescription] =
+    React.useState<string>('');
+  const [penaltyPrice, setPenaltyPrice] = React.useState<string>('');
+  const [penaltyCurrencyId, setPenaltyCurrencyId] = React.useState<string>('');
+
+  const [penalties, setPenalties] = React.useState([
+    {
+      id: '1',
+      name: 'Window Dressing',
+      description: 'Leaving clothes around',
+      price: 5,
+      currencyId: '1',
+    },
+    {
+      id: '2',
+      name: 'Dishes',
+      description: 'Not doing dishes',
+      price: 3,
+      currencyId: '1',
+    },
+  ]);
 
   const [priceTypes, setPriceTypes] = React.useState([
     {id: '1', name: 'Cash', label: '$', labelPosition: 'before'},
@@ -241,6 +261,38 @@ function SetupScreen(): React.JSX.Element {
     setAddPriceModalVisible(false);
   };
 
+  const handleSavePenalty = (): void => {
+    if (!penaltyName.trim() || !penaltyPrice || !penaltyCurrencyId) {
+      return; // Don't save if required fields are empty
+    }
+
+    const newPenalty = {
+      id: String(penalties.length + 1),
+      name: penaltyName,
+      description: penaltyDescription,
+      price: parseInt(penaltyPrice, 10),
+      currencyId: penaltyCurrencyId,
+    };
+
+    setPenalties([...penalties, newPenalty]);
+
+    // Reset form
+    setPenaltyName('');
+    setPenaltyDescription('');
+    setPenaltyPrice('');
+    setPenaltyCurrencyId('');
+    setAddPenaltyModalVisible(false);
+  };
+
+  const handleCancelPenalty = (): void => {
+    // Reset form
+    setPenaltyName('');
+    setPenaltyDescription('');
+    setPenaltyPrice('');
+    setPenaltyCurrencyId('');
+    setAddPenaltyModalVisible(false);
+  };
+
   return (
     <View style={screenStyles.container}>
       {/* Header with Settings Icon */}
@@ -258,21 +310,27 @@ function SetupScreen(): React.JSX.Element {
         {/* Penalties Section */}
         <View style={setupStyles.section}>
           <Text style={setupStyles.sectionTitle}>Penalties</Text>
-          {penalties.map(penalty => (
-            <View key={penalty.id} style={setupStyles.listItem}>
-              <View style={setupStyles.listItemContent}>
-                <Text style={setupStyles.listItemTitle}>{penalty.name}</Text>
-                <Text style={setupStyles.listItemSubtitle}>
-                  {penalty.priceCount} price{penalty.priceCount > 1 ? 's' : ''}
-                </Text>
+          {penalties.map(penalty => {
+            const currency = priceTypes.find(p => p.id === penalty.currencyId);
+            return (
+              <View key={penalty.id} style={setupStyles.listItem}>
+                <View style={setupStyles.listItemContent}>
+                  <Text style={setupStyles.listItemTitle}>{penalty.name}</Text>
+                  <Text style={setupStyles.listItemSubtitle}>
+                    {penalty.price} {currency?.label || ''}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color="#999" />
               </View>
-              <Ionicons name="chevron-forward" size={20} color="#999" />
-            </View>
-          ))}
-          <View style={setupStyles.addButton}>
+            );
+          })}
+          <Pressable
+            style={setupStyles.addButton}
+            onPress={() => setAddPenaltyModalVisible(true)}
+          >
             <Ionicons name="add-circle-outline" size={20} color="#000" />
             <Text style={setupStyles.addButtonText}>Add Penalty</Text>
-          </View>
+          </Pressable>
         </View>
 
         {/* Price Types Section */}
@@ -508,6 +566,137 @@ function SetupScreen(): React.JSX.Element {
                 ]}
                 onPress={handleSavePriceType}
                 disabled={!priceName.trim()}
+              >
+                <Text style={formStyles.saveButtonText}>Save</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Add Penalty Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={addPenaltyModalVisible}
+        onRequestClose={handleCancelPenalty}
+      >
+        <View style={modalStyles.modalOverlay}>
+          <View style={modalStyles.modalContent}>
+            {/* Modal Header */}
+            <View style={modalStyles.modalHeader}>
+              <Text style={modalStyles.modalTitle}>Add Penalty</Text>
+              <Pressable onPress={handleCancelPenalty}>
+                <Ionicons name="close" size={28} color="#000" />
+              </Pressable>
+            </View>
+
+            {/* Form Content */}
+            <ScrollView style={modalStyles.modalBody}>
+              <View style={formStyles.formContainer}>
+                {/* Name Field */}
+                <View style={formStyles.fieldGroup}>
+                  <Text style={formStyles.fieldLabel}>
+                    Name <Text style={formStyles.required}>*</Text>
+                  </Text>
+                  <TextInput
+                    style={formStyles.textInput}
+                    placeholder="e.g., Put back the chair"
+                    placeholderTextColor="#999"
+                    value={penaltyName}
+                    onChangeText={setPenaltyName}
+                  />
+                </View>
+
+                {/* Description Field */}
+                <View style={formStyles.fieldGroup}>
+                  <Text style={formStyles.fieldLabel}>Description</Text>
+                  <TextInput
+                    style={[formStyles.textInput, formStyles.textArea]}
+                    placeholder="Optional description"
+                    placeholderTextColor="#999"
+                    value={penaltyDescription}
+                    onChangeText={setPenaltyDescription}
+                    multiline
+                    numberOfLines={3}
+                  />
+                </View>
+
+                {/* Price Field */}
+                <View style={formStyles.fieldGroup}>
+                  <Text style={formStyles.fieldLabel}>
+                    Price <Text style={formStyles.required}>*</Text>
+                  </Text>
+                  <TextInput
+                    style={formStyles.textInput}
+                    placeholder="e.g., 1, 5, 10"
+                    placeholderTextColor="#999"
+                    value={penaltyPrice}
+                    onChangeText={setPenaltyPrice}
+                    keyboardType="numeric"
+                  />
+                </View>
+
+                {/* Currency/Price Type Field */}
+                <View style={formStyles.fieldGroup}>
+                  <Text style={formStyles.fieldLabel}>
+                    Price Type <Text style={formStyles.required}>*</Text>
+                  </Text>
+                  <Text style={formStyles.fieldHint}>
+                    Select a price type (add more in Price Types section)
+                  </Text>
+                  <View style={formStyles.pickerContainer}>
+                    {priceTypes.map(priceType => (
+                      <Pressable
+                        key={priceType.id}
+                        style={[
+                          formStyles.pickerOption,
+                          penaltyCurrencyId === priceType.id &&
+                            formStyles.pickerOptionSelected,
+                        ]}
+                        onPress={() => setPenaltyCurrencyId(priceType.id)}
+                      >
+                        <View
+                          style={[
+                            formStyles.radioCircle,
+                            penaltyCurrencyId === priceType.id &&
+                              formStyles.radioCircleSelected,
+                          ]}
+                        >
+                          {penaltyCurrencyId === priceType.id && (
+                            <View style={formStyles.radioDot} />
+                          )}
+                        </View>
+                        <Text style={formStyles.pickerLabel}>
+                          {priceType.name} ({priceType.label})
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                </View>
+              </View>
+            </ScrollView>
+
+            {/* Action Buttons */}
+            <View style={formStyles.buttonContainer}>
+              <Pressable
+                style={formStyles.cancelButton}
+                onPress={handleCancelPenalty}
+              >
+                <Text style={formStyles.cancelButtonText}>Cancel</Text>
+              </Pressable>
+              <Pressable
+                style={[
+                  formStyles.saveButton,
+                  (!penaltyName.trim() ||
+                    !penaltyPrice ||
+                    !penaltyCurrencyId) &&
+                    formStyles.saveButtonDisabled,
+                ]}
+                onPress={handleSavePenalty}
+                disabled={
+                  !penaltyName.trim() || !penaltyPrice || !penaltyCurrencyId
+                }
               >
                 <Text style={formStyles.saveButtonText}>Save</Text>
               </Pressable>
@@ -1031,5 +1220,28 @@ const formStyles = StyleSheet.create({
     fontSize: 16,
     paddingHorizontal: 16,
     paddingVertical: 12,
+  },
+  pickerContainer: {
+    marginTop: 12,
+  },
+  pickerOption: {
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    borderColor: '#e5e5e5',
+    borderRadius: 12,
+    borderWidth: 1,
+    flexDirection: 'row',
+    marginBottom: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  pickerOptionSelected: {
+    backgroundColor: '#f0f0f0',
+    borderColor: '#000',
+  },
+  pickerLabel: {
+    color: '#000',
+    fontSize: 16,
+    marginLeft: 12,
   },
 });
