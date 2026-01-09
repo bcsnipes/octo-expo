@@ -1,4 +1,12 @@
-import {ScrollView, StyleSheet, Text, View} from 'react-native';
+import {
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  View,
+} from 'react-native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {Ionicons} from '@expo/vector-icons';
 import {NavigationContainer} from '@react-navigation/native';
@@ -177,6 +185,10 @@ function HistoryScreen(): React.JSX.Element {
 
 // Setup Screen Component (Penalties & Price Types)
 function SetupScreen(): React.JSX.Element {
+  const [settingsModalVisible, setSettingsModalVisible] =
+    React.useState<boolean>(false);
+  const [isDarkMode, setIsDarkMode] = React.useState<boolean>(false);
+
   const penalties = [
     {id: '1', name: 'Window Dressing', priceCount: 1},
     {id: '2', name: 'Dishes', priceCount: 2},
@@ -193,9 +205,12 @@ function SetupScreen(): React.JSX.Element {
       {/* Header with Settings Icon */}
       <View style={setupStyles.header}>
         <Text style={setupStyles.headerTitle}>Setup</Text>
-        <View style={setupStyles.settingsIcon}>
+        <Pressable
+          style={setupStyles.settingsIcon}
+          onPress={() => setSettingsModalVisible(true)}
+        >
           <Ionicons name="settings-outline" size={24} color="#000" />
-        </View>
+        </Pressable>
       </View>
 
       <ScrollView style={setupStyles.scrollContent}>
@@ -239,6 +254,91 @@ function SetupScreen(): React.JSX.Element {
           </View>
         </View>
       </ScrollView>
+
+      {/* Settings Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={settingsModalVisible}
+        onRequestClose={() => setSettingsModalVisible(false)}
+      >
+        <View style={modalStyles.modalOverlay}>
+          <View style={modalStyles.modalContent}>
+            {/* Modal Header */}
+            <View style={modalStyles.modalHeader}>
+              <Text style={modalStyles.modalTitle}>App Settings</Text>
+              <Pressable onPress={() => setSettingsModalVisible(false)}>
+                <Ionicons name="close" size={28} color="#000" />
+              </Pressable>
+            </View>
+
+            {/* Settings Content */}
+            <ScrollView style={modalStyles.modalBody}>
+              {/* Display Section */}
+              <View style={modalStyles.section}>
+                <Text style={modalStyles.sectionTitle}>Display</Text>
+                <View style={modalStyles.settingRow}>
+                  <View style={modalStyles.settingContent}>
+                    <Text style={modalStyles.settingLabel}>Dark Mode</Text>
+                    <Text style={modalStyles.settingDescription}>
+                      Switch between light and dark theme
+                    </Text>
+                  </View>
+                  <Switch
+                    value={isDarkMode}
+                    onValueChange={setIsDarkMode}
+                    trackColor={{false: '#e5e5e5', true: '#000'}}
+                    thumbColor="#fff"
+                  />
+                </View>
+              </View>
+
+              {/* Profile Section */}
+              <View style={modalStyles.section}>
+                <Text style={modalStyles.sectionTitle}>Your Profile</Text>
+                <Pressable style={modalStyles.settingRow}>
+                  <View style={modalStyles.settingContent}>
+                    <Text style={modalStyles.settingLabel}>Name</Text>
+                    <Text style={modalStyles.settingValue}>Brett</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color="#999" />
+                </Pressable>
+                <Pressable style={modalStyles.settingRow}>
+                  <View style={modalStyles.settingContent}>
+                    <Text style={modalStyles.settingLabel}>Birthday</Text>
+                    <Text style={modalStyles.settingValue}>Nov 1</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color="#999" />
+                </Pressable>
+                <Pressable style={modalStyles.settingRow}>
+                  <View style={modalStyles.settingContent}>
+                    <Text style={modalStyles.settingLabel}>MBTI</Text>
+                    <Text style={modalStyles.settingValue}>ISFJ</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color="#999" />
+                </Pressable>
+                <Pressable style={modalStyles.settingRow}>
+                  <View style={modalStyles.settingContent}>
+                    <Text style={modalStyles.settingLabel}>Love Languages</Text>
+                    <Text style={modalStyles.settingValue}>3 selected</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color="#999" />
+                </Pressable>
+              </View>
+
+              {/* About Section */}
+              <View style={modalStyles.section}>
+                <Text style={modalStyles.sectionTitle}>About</Text>
+                <Pressable style={modalStyles.settingRow}>
+                  <Text style={modalStyles.settingLabel}>Version</Text>
+                  <Text style={modalStyles.settingValue}>1.0.0</Text>
+                </Pressable>
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
       <StatusBar style="auto" />
     </View>
   );
@@ -574,5 +674,77 @@ const coupleStyles = StyleSheet.create({
     letterSpacing: 1,
     marginBottom: 16,
     textTransform: 'uppercase',
+  },
+});
+
+// Modal Styles
+const modalStyles = StyleSheet.create({
+  modalBody: {
+    flex: 1,
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    height: '80%',
+    marginTop: 'auto',
+    paddingBottom: 34,
+  },
+  modalHeader: {
+    alignItems: 'center',
+    borderBottomColor: '#f0f0f0',
+    borderBottomWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  modalOverlay: {
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    flex: 1,
+  },
+  modalTitle: {
+    color: '#000',
+    fontSize: 20,
+    fontWeight: '700',
+  },
+  section: {
+    marginBottom: 32,
+    paddingHorizontal: 20,
+  },
+  sectionTitle: {
+    color: '#999',
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 1,
+    marginBottom: 12,
+    marginTop: 24,
+    textTransform: 'uppercase',
+  },
+  settingContent: {
+    flex: 1,
+  },
+  settingDescription: {
+    color: '#999',
+    fontSize: 13,
+    marginTop: 2,
+  },
+  settingLabel: {
+    color: '#000',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  settingRow: {
+    alignItems: 'center',
+    borderBottomColor: '#f0f0f0',
+    borderBottomWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+  },
+  settingValue: {
+    color: '#999',
+    fontSize: 14,
+    marginTop: 2,
   },
 });
