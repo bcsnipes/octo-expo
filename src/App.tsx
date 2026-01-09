@@ -5,6 +5,7 @@ import {
   StyleSheet,
   Switch,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
@@ -187,7 +188,15 @@ function HistoryScreen(): React.JSX.Element {
 function SetupScreen(): React.JSX.Element {
   const [settingsModalVisible, setSettingsModalVisible] =
     React.useState<boolean>(false);
+  const [addPriceModalVisible, setAddPriceModalVisible] =
+    React.useState<boolean>(false);
   const [isDarkMode, setIsDarkMode] = React.useState<boolean>(false);
+
+  // Add Price Type form state
+  const [priceName, setPriceName] = React.useState<string>('');
+  const [priceLabel, setPriceLabel] = React.useState<string>('');
+  const [labelPosition, setLabelPosition] = React.useState<string>('after');
+  const [priceDescription, setPriceDescription] = React.useState<string>('');
 
   const penalties = [
     {id: '1', name: 'Window Dressing', priceCount: 1},
@@ -195,10 +204,42 @@ function SetupScreen(): React.JSX.Element {
     {id: '3', name: 'Late to Dinner', priceCount: 1},
   ];
 
-  const priceTypes = [
-    {id: '1', name: 'Cash', unit: '$'},
-    {id: '2', name: 'Foot Rubs', unit: 'rub'},
-  ];
+  const [priceTypes, setPriceTypes] = React.useState([
+    {id: '1', name: 'Cash', label: '$', labelPosition: 'before'},
+    {id: '2', name: 'Foot Rubs', label: 'rub', labelPosition: 'after'},
+  ]);
+
+  const handleSavePriceType = (): void => {
+    if (!priceName.trim()) {
+      return; // Don't save if name is empty
+    }
+
+    const newPriceType = {
+      id: String(priceTypes.length + 1),
+      name: priceName,
+      label: priceLabel || priceName,
+      labelPosition: labelPosition,
+      description: priceDescription,
+    };
+
+    setPriceTypes([...priceTypes, newPriceType]);
+
+    // Reset form
+    setPriceName('');
+    setPriceLabel('');
+    setLabelPosition('after');
+    setPriceDescription('');
+    setAddPriceModalVisible(false);
+  };
+
+  const handleCancelPriceType = (): void => {
+    // Reset form
+    setPriceName('');
+    setPriceLabel('');
+    setLabelPosition('after');
+    setPriceDescription('');
+    setAddPriceModalVisible(false);
+  };
 
   return (
     <View style={screenStyles.container}>
@@ -242,16 +283,19 @@ function SetupScreen(): React.JSX.Element {
               <View style={setupStyles.listItemContent}>
                 <Text style={setupStyles.listItemTitle}>{priceType.name}</Text>
                 <Text style={setupStyles.listItemSubtitle}>
-                  Unit: {priceType.unit}
+                  Label: {priceType.label} ({priceType.labelPosition})
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color="#999" />
             </View>
           ))}
-          <View style={setupStyles.addButton}>
+          <Pressable
+            style={setupStyles.addButton}
+            onPress={() => setAddPriceModalVisible(true)}
+          >
             <Ionicons name="add-circle-outline" size={20} color="#000" />
             <Text style={setupStyles.addButtonText}>Add Price Type</Text>
-          </View>
+          </Pressable>
         </View>
       </ScrollView>
 
@@ -335,6 +379,139 @@ function SetupScreen(): React.JSX.Element {
                 </Pressable>
               </View>
             </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Add Price Type Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={addPriceModalVisible}
+        onRequestClose={handleCancelPriceType}
+      >
+        <View style={modalStyles.modalOverlay}>
+          <View style={modalStyles.modalContent}>
+            {/* Modal Header */}
+            <View style={modalStyles.modalHeader}>
+              <Text style={modalStyles.modalTitle}>Add Price Type</Text>
+              <Pressable onPress={handleCancelPriceType}>
+                <Ionicons name="close" size={28} color="#000" />
+              </Pressable>
+            </View>
+
+            {/* Form Content */}
+            <ScrollView style={modalStyles.modalBody}>
+              <View style={formStyles.formContainer}>
+                {/* Name Field */}
+                <View style={formStyles.fieldGroup}>
+                  <Text style={formStyles.fieldLabel}>
+                    Name <Text style={formStyles.required}>*</Text>
+                  </Text>
+                  <TextInput
+                    style={formStyles.textInput}
+                    placeholder="e.g., RMB, Eating Out"
+                    placeholderTextColor="#999"
+                    value={priceName}
+                    onChangeText={setPriceName}
+                  />
+                </View>
+
+                {/* Label Field */}
+                <View style={formStyles.fieldGroup}>
+                  <Text style={formStyles.fieldLabel}>Label</Text>
+                  <TextInput
+                    style={formStyles.textInput}
+                    placeholder="e.g., $, RMB, time"
+                    placeholderTextColor="#999"
+                    value={priceLabel}
+                    onChangeText={setPriceLabel}
+                  />
+                  <Text style={formStyles.fieldHint}>
+                    What displays with the number
+                  </Text>
+                </View>
+
+                {/* Label Position Field */}
+                <View style={formStyles.fieldGroup}>
+                  <Text style={formStyles.fieldLabel}>Label Position</Text>
+                  <View style={formStyles.radioGroup}>
+                    <Pressable
+                      style={formStyles.radioButton}
+                      onPress={() => setLabelPosition('before')}
+                    >
+                      <View
+                        style={[
+                          formStyles.radioCircle,
+                          labelPosition === 'before' &&
+                            formStyles.radioCircleSelected,
+                        ]}
+                      >
+                        {labelPosition === 'before' && (
+                          <View style={formStyles.radioDot} />
+                        )}
+                      </View>
+                      <Text style={formStyles.radioLabel}>Before</Text>
+                    </Pressable>
+
+                    <Pressable
+                      style={formStyles.radioButton}
+                      onPress={() => setLabelPosition('after')}
+                    >
+                      <View
+                        style={[
+                          formStyles.radioCircle,
+                          labelPosition === 'after' &&
+                            formStyles.radioCircleSelected,
+                        ]}
+                      >
+                        {labelPosition === 'after' && (
+                          <View style={formStyles.radioDot} />
+                        )}
+                      </View>
+                      <Text style={formStyles.radioLabel}>After</Text>
+                    </Pressable>
+                  </View>
+                  <Text style={formStyles.fieldHint}>
+                    $10 (before) vs 10 RMB (after)
+                  </Text>
+                </View>
+
+                {/* Description Field */}
+                <View style={formStyles.fieldGroup}>
+                  <Text style={formStyles.fieldLabel}>Description</Text>
+                  <TextInput
+                    style={[formStyles.textInput, formStyles.textArea]}
+                    placeholder="Optional description"
+                    placeholderTextColor="#999"
+                    value={priceDescription}
+                    onChangeText={setPriceDescription}
+                    multiline
+                    numberOfLines={3}
+                  />
+                </View>
+              </View>
+            </ScrollView>
+
+            {/* Action Buttons */}
+            <View style={formStyles.buttonContainer}>
+              <Pressable
+                style={formStyles.cancelButton}
+                onPress={handleCancelPriceType}
+              >
+                <Text style={formStyles.cancelButtonText}>Cancel</Text>
+              </Pressable>
+              <Pressable
+                style={[
+                  formStyles.saveButton,
+                  !priceName.trim() && formStyles.saveButtonDisabled,
+                ]}
+                onPress={handleSavePriceType}
+                disabled={!priceName.trim()}
+              >
+                <Text style={formStyles.saveButtonText}>Save</Text>
+              </Pressable>
+            </View>
           </View>
         </View>
       </Modal>
@@ -746,5 +923,113 @@ const modalStyles = StyleSheet.create({
     color: '#999',
     fontSize: 14,
     marginTop: 2,
+  },
+});
+
+// Form Styles
+const formStyles = StyleSheet.create({
+  buttonContainer: {
+    borderTopColor: '#f0f0f0',
+    borderTopWidth: 1,
+    flexDirection: 'row',
+    paddingBottom: 34,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+  },
+  cancelButton: {
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    borderRadius: 12,
+    flex: 1,
+    marginRight: 8,
+    paddingVertical: 16,
+  },
+  cancelButtonText: {
+    color: '#000',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  fieldGroup: {
+    marginBottom: 24,
+  },
+  fieldHint: {
+    color: '#999',
+    fontSize: 13,
+    marginTop: 6,
+  },
+  fieldLabel: {
+    color: '#000',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  formContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 24,
+  },
+  radioDot: {
+    backgroundColor: '#000',
+    borderRadius: 6,
+    height: 12,
+    width: 12,
+  },
+  radioButton: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    marginRight: 24,
+  },
+  radioCircle: {
+    alignItems: 'center',
+    borderColor: '#ccc',
+    borderRadius: 12,
+    borderWidth: 2,
+    height: 24,
+    justifyContent: 'center',
+    marginRight: 8,
+    width: 24,
+  },
+  radioCircleSelected: {
+    borderColor: '#000',
+  },
+  radioGroup: {
+    flexDirection: 'row',
+  },
+  radioLabel: {
+    color: '#000',
+    fontSize: 16,
+  },
+  required: {
+    color: '#ef4444',
+  },
+  saveButton: {
+    alignItems: 'center',
+    backgroundColor: '#000',
+    borderRadius: 12,
+    flex: 1,
+    marginLeft: 8,
+    paddingVertical: 16,
+  },
+  saveButtonDisabled: {
+    backgroundColor: '#ccc',
+  },
+  saveButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  textArea: {
+    height: 80,
+    paddingTop: 12,
+    textAlignVertical: 'top',
+  },
+  textInput: {
+    backgroundColor: '#f5f5f5',
+    borderColor: '#e5e5e5',
+    borderRadius: 12,
+    borderWidth: 1,
+    color: '#000',
+    fontSize: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
 });
