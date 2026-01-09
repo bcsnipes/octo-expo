@@ -130,52 +130,354 @@ function AddInfractionScreen(): React.JSX.Element {
 
 // History Screen Component
 function HistoryScreen(): React.JSX.Element {
-  const transactions = [
+  const [filterTab, setFilterTab] = React.useState<string>('all');
+  const [selectedInfraction, setSelectedInfraction] = React.useState<
+    string | null
+  >(null);
+
+  // Dummy data with UserPenalty structure
+  const infractions = [
     {
       id: '1',
-      penalty: 'Window Dressing',
-      who: 'You',
-      amount: '$5',
-      date: '2 hours ago',
+      penaltyName: 'Window Dressing',
+      penaltyPrice: 5,
+      currencyLabel: '$',
+      offender: 'You',
+      reporter: 'Partner',
+      isApproved: false,
+      isPaid: false,
+      isRejected: false,
+      notes: '',
+      createdAt: '2 hours ago',
     },
     {
       id: '2',
-      penalty: 'Dishes',
-      who: 'Partner',
-      amount: '$3',
-      date: 'Yesterday',
+      penaltyName: 'Dishes',
+      penaltyPrice: 3,
+      currencyLabel: '$',
+      offender: 'Partner',
+      reporter: 'You',
+      isApproved: true,
+      isPaid: false,
+      isRejected: false,
+      notes: 'Forgot to do dishes after dinner',
+      createdAt: 'Yesterday',
     },
     {
       id: '3',
-      penalty: 'Window Dressing',
-      who: 'You',
-      amount: '$5',
-      date: '3 days ago',
+      penaltyName: 'Window Dressing',
+      penaltyPrice: 5,
+      currencyLabel: '$',
+      offender: 'You',
+      reporter: 'Partner',
+      isApproved: true,
+      isPaid: true,
+      isRejected: false,
+      notes: '',
+      createdAt: '3 days ago',
+    },
+    {
+      id: '4',
+      penaltyName: 'Late to dinner',
+      penaltyPrice: 2,
+      currencyLabel: '$',
+      offender: 'Partner',
+      reporter: 'You',
+      isApproved: false,
+      isPaid: false,
+      isRejected: true,
+      notes: 'Was stuck in traffic, not my fault',
+      createdAt: '5 days ago',
     },
   ];
+
+  // Filter infractions based on selected tab
+  const filteredInfractions = infractions.filter(inf => {
+    if (filterTab === 'all') return true;
+    if (filterTab === 'pending')
+      return !inf.isApproved && !inf.isRejected && !inf.isPaid;
+    if (filterTab === 'approved') return inf.isApproved && !inf.isPaid;
+    if (filterTab === 'paid') return inf.isPaid;
+    return true;
+  });
+
+  const getStatusBadge = (inf: {
+    isApproved: boolean;
+    isPaid: boolean;
+    isRejected: boolean;
+  }): {label: string; color: string; bgColor: string} => {
+    if (inf.isPaid)
+      return {label: 'Paid', color: '#10b981', bgColor: '#d1fae5'};
+    if (inf.isRejected)
+      return {label: 'Rejected', color: '#ef4444', bgColor: '#fee2e2'};
+    if (inf.isApproved)
+      return {label: 'Approved', color: '#3b82f6', bgColor: '#dbeafe'};
+    return {label: 'Pending', color: '#f59e0b', bgColor: '#fef3c7'};
+  };
 
   return (
     <View style={screenStyles.container}>
       <Text style={screenStyles.screenTitle}>History</Text>
+
+      {/* Filter Tabs */}
+      <View style={historyStyles.filterTabs}>
+        <Pressable
+          style={[
+            historyStyles.filterTab,
+            filterTab === 'all' && historyStyles.filterTabActive,
+          ]}
+          onPress={() => setFilterTab('all')}
+        >
+          <Text
+            style={[
+              historyStyles.filterTabText,
+              filterTab === 'all' && historyStyles.filterTabTextActive,
+            ]}
+          >
+            All
+          </Text>
+        </Pressable>
+        <Pressable
+          style={[
+            historyStyles.filterTab,
+            filterTab === 'pending' && historyStyles.filterTabActive,
+          ]}
+          onPress={() => setFilterTab('pending')}
+        >
+          <Text
+            style={[
+              historyStyles.filterTabText,
+              filterTab === 'pending' && historyStyles.filterTabTextActive,
+            ]}
+          >
+            Pending
+          </Text>
+        </Pressable>
+        <Pressable
+          style={[
+            historyStyles.filterTab,
+            filterTab === 'approved' && historyStyles.filterTabActive,
+          ]}
+          onPress={() => setFilterTab('approved')}
+        >
+          <Text
+            style={[
+              historyStyles.filterTabText,
+              filterTab === 'approved' && historyStyles.filterTabTextActive,
+            ]}
+          >
+            Approved
+          </Text>
+        </Pressable>
+        <Pressable
+          style={[
+            historyStyles.filterTab,
+            filterTab === 'paid' && historyStyles.filterTabActive,
+          ]}
+          onPress={() => setFilterTab('paid')}
+        >
+          <Text
+            style={[
+              historyStyles.filterTabText,
+              filterTab === 'paid' && historyStyles.filterTabTextActive,
+            ]}
+          >
+            Paid
+          </Text>
+        </Pressable>
+      </View>
+
+      {/* Infractions List */}
       <ScrollView style={screenStyles.scrollContent}>
-        {transactions.map(transaction => (
-          <View key={transaction.id} style={screenStyles.transactionCard}>
-            <View style={screenStyles.transactionRow}>
-              <View>
-                <Text style={screenStyles.transactionPenalty}>
-                  {transaction.penalty}
-                </Text>
-                <Text style={screenStyles.transactionMeta}>
-                  {transaction.who} • {transaction.date}
-                </Text>
+        {filteredInfractions.map(infraction => {
+          const status = getStatusBadge(infraction);
+          return (
+            <Pressable
+              key={infraction.id}
+              style={historyStyles.infractionCard}
+              onPress={() => setSelectedInfraction(infraction.id)}
+            >
+              <View style={historyStyles.infractionRow}>
+                <View style={historyStyles.infractionLeft}>
+                  <Text style={historyStyles.infractionPenalty}>
+                    {infraction.penaltyName}
+                  </Text>
+                  <Text style={historyStyles.infractionMeta}>
+                    {infraction.offender} • {infraction.createdAt}
+                  </Text>
+                  <View
+                    style={[
+                      historyStyles.statusBadge,
+                      {backgroundColor: status.bgColor},
+                    ]}
+                  >
+                    <Text
+                      style={[historyStyles.statusText, {color: status.color}]}
+                    >
+                      {status.label}
+                    </Text>
+                  </View>
+                </View>
+                <View style={historyStyles.infractionRight}>
+                  <Text style={historyStyles.infractionAmount}>
+                    {infraction.penaltyPrice} {infraction.currencyLabel}
+                  </Text>
+                  <Ionicons name="chevron-forward" size={20} color="#999" />
+                </View>
               </View>
-              <Text style={screenStyles.transactionAmount}>
-                {transaction.amount}
-              </Text>
-            </View>
-          </View>
-        ))}
+            </Pressable>
+          );
+        })}
       </ScrollView>
+
+      {/* Infraction Detail Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={selectedInfraction !== null}
+        onRequestClose={() => setSelectedInfraction(null)}
+      >
+        <View style={modalStyles.modalOverlay}>
+          <View style={modalStyles.modalContent}>
+            {selectedInfraction && (
+              <>
+                <View style={modalStyles.modalHeader}>
+                  <Text style={modalStyles.modalTitle}>Infraction Details</Text>
+                  <Pressable onPress={() => setSelectedInfraction(null)}>
+                    <Ionicons name="close" size={28} color="#000" />
+                  </Pressable>
+                </View>
+
+                <ScrollView style={modalStyles.modalBody}>
+                  <View style={formStyles.formContainer}>
+                    {/* Penalty Info */}
+                    <View style={historyStyles.detailSection}>
+                      <Text style={historyStyles.detailLabel}>Penalty</Text>
+                      <Text style={historyStyles.detailValue}>
+                        {
+                          infractions.find(i => i.id === selectedInfraction)
+                            ?.penaltyName
+                        }
+                      </Text>
+                    </View>
+
+                    <View style={historyStyles.detailSection}>
+                      <Text style={historyStyles.detailLabel}>Amount</Text>
+                      <Text style={historyStyles.detailValue}>
+                        {
+                          infractions.find(i => i.id === selectedInfraction)
+                            ?.penaltyPrice
+                        }{' '}
+                        {
+                          infractions.find(i => i.id === selectedInfraction)
+                            ?.currencyLabel
+                        }
+                      </Text>
+                    </View>
+
+                    <View style={historyStyles.detailSection}>
+                      <Text style={historyStyles.detailLabel}>
+                        Committed by
+                      </Text>
+                      <Text style={historyStyles.detailValue}>
+                        {
+                          infractions.find(i => i.id === selectedInfraction)
+                            ?.offender
+                        }
+                      </Text>
+                    </View>
+
+                    <View style={historyStyles.detailSection}>
+                      <Text style={historyStyles.detailLabel}>Reported by</Text>
+                      <Text style={historyStyles.detailValue}>
+                        {
+                          infractions.find(i => i.id === selectedInfraction)
+                            ?.reporter
+                        }
+                      </Text>
+                    </View>
+
+                    <View style={historyStyles.detailSection}>
+                      <Text style={historyStyles.detailLabel}>Date</Text>
+                      <Text style={historyStyles.detailValue}>
+                        {
+                          infractions.find(i => i.id === selectedInfraction)
+                            ?.createdAt
+                        }
+                      </Text>
+                    </View>
+
+                    {infractions.find(i => i.id === selectedInfraction)
+                      ?.notes && (
+                      <View style={historyStyles.detailSection}>
+                        <Text style={historyStyles.detailLabel}>Notes</Text>
+                        <Text style={historyStyles.detailNotes}>
+                          {
+                            infractions.find(i => i.id === selectedInfraction)
+                              ?.notes
+                          }
+                        </Text>
+                      </View>
+                    )}
+
+                    {/* Action Buttons */}
+                    {!infractions.find(i => i.id === selectedInfraction)
+                      ?.isPaid && (
+                      <View style={historyStyles.actionButtons}>
+                        {!infractions.find(i => i.id === selectedInfraction)
+                          ?.isApproved &&
+                          !infractions.find(i => i.id === selectedInfraction)
+                            ?.isRejected && (
+                            <>
+                              <Pressable
+                                style={historyStyles.rejectButton}
+                                onPress={() => {
+                                  console.log('Rejected:', selectedInfraction);
+                                  setSelectedInfraction(null);
+                                }}
+                              >
+                                <Text style={historyStyles.rejectButtonText}>
+                                  Reject
+                                </Text>
+                              </Pressable>
+                              <Pressable
+                                style={historyStyles.approveButton}
+                                onPress={() => {
+                                  console.log('Approved:', selectedInfraction);
+                                  setSelectedInfraction(null);
+                                }}
+                              >
+                                <Text style={historyStyles.approveButtonText}>
+                                  Approve
+                                </Text>
+                              </Pressable>
+                            </>
+                          )}
+
+                        {infractions.find(i => i.id === selectedInfraction)
+                          ?.isApproved && (
+                          <Pressable
+                            style={historyStyles.paidButton}
+                            onPress={() => {
+                              console.log('Mark paid:', selectedInfraction);
+                              setSelectedInfraction(null);
+                            }}
+                          >
+                            <Text style={historyStyles.paidButtonText}>
+                              Mark as Paid
+                            </Text>
+                          </Pressable>
+                        )}
+                      </View>
+                    )}
+                  </View>
+                </ScrollView>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
+
       <StatusBar style="auto" />
     </View>
   );
@@ -1256,6 +1558,144 @@ const screenStyles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
+  },
+});
+
+// History Screen Styles
+const historyStyles = StyleSheet.create({
+  filterTabs: {
+    borderBottomColor: '#e5e5e5',
+    borderBottomWidth: 1,
+    flexDirection: 'row',
+    marginBottom: 16,
+    paddingHorizontal: 20,
+  },
+  filterTab: {
+    borderBottomColor: 'transparent',
+    borderBottomWidth: 2,
+    marginRight: 24,
+    paddingBottom: 12,
+  },
+  filterTabActive: {
+    borderBottomColor: '#000',
+  },
+  filterTabText: {
+    color: '#999',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  filterTabTextActive: {
+    color: '#000',
+  },
+  infractionCard: {
+    borderBottomColor: '#f0f0f0',
+    borderBottomWidth: 1,
+    paddingVertical: 16,
+  },
+  infractionRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  infractionLeft: {
+    flex: 1,
+  },
+  infractionPenalty: {
+    color: '#000',
+    fontSize: 16,
+    fontWeight: '500',
+    marginBottom: 4,
+  },
+  infractionMeta: {
+    color: '#999',
+    fontSize: 13,
+    marginBottom: 8,
+  },
+  infractionRight: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 8,
+  },
+  infractionAmount: {
+    color: '#000',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  statusBadge: {
+    alignSelf: 'flex-start',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  detailSection: {
+    marginBottom: 20,
+  },
+  detailLabel: {
+    color: '#666',
+    fontSize: 13,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+    marginBottom: 6,
+    textTransform: 'uppercase',
+  },
+  detailValue: {
+    color: '#000',
+    fontSize: 16,
+  },
+  detailNotes: {
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+    color: '#000',
+    fontSize: 15,
+    lineHeight: 22,
+    padding: 12,
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 24,
+  },
+  approveButton: {
+    alignItems: 'center',
+    backgroundColor: '#10b981',
+    borderRadius: 12,
+    flex: 1,
+    paddingVertical: 16,
+  },
+  approveButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  rejectButton: {
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    borderColor: '#ef4444',
+    borderRadius: 12,
+    borderWidth: 2,
+    flex: 1,
+    paddingVertical: 16,
+  },
+  rejectButtonText: {
+    color: '#ef4444',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  paidButton: {
+    alignItems: 'center',
+    backgroundColor: '#3b82f6',
+    borderRadius: 12,
+    flex: 1,
+    paddingVertical: 16,
+  },
+  paidButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 
