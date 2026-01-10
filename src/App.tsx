@@ -17,52 +17,8 @@ import {StatusBar} from 'expo-status-bar';
 // Create the bottom tab navigator
 const Tab = createBottomTabNavigator();
 
-// Balance Screen Component
-function BalanceScreen(): React.JSX.Element {
-  const balances = [
-    {id: '1', name: 'Cash', amount: 23, unit: '$', userOwes: true},
-    {id: '2', name: 'Foot Rubs', amount: 1, unit: 'rub', userOwes: false},
-  ];
-
-  const partnerNames = {me: 'You', them: 'Partner'};
-
-  return (
-    <View style={screenStyles.container}>
-      <Text style={screenStyles.screenTitle}>Balance</Text>
-      <ScrollView style={screenStyles.scrollContent}>
-        {balances.map(balance => (
-          <View key={balance.id} style={screenStyles.balanceCard}>
-            <View style={screenStyles.balanceRow}>
-              <Text style={screenStyles.balanceName}>{balance.name}</Text>
-              <View style={screenStyles.balanceAmountContainer}>
-                <Text
-                  style={[
-                    screenStyles.balanceAmount,
-                    balance.userOwes
-                      ? screenStyles.balanceNegative
-                      : screenStyles.balancePositive,
-                  ]}
-                >
-                  {balance.userOwes ? '-' : '+'}
-                  {balance.amount} {balance.unit}
-                </Text>
-              </View>
-            </View>
-            <Text style={screenStyles.balanceSubtext}>
-              {balance.userOwes
-                ? `You owe ${partnerNames.them}`
-                : `${partnerNames.them} owes you`}
-            </Text>
-          </View>
-        ))}
-      </ScrollView>
-      <StatusBar style="auto" />
-    </View>
-  );
-}
-
-// Couple Screen Component
-function CoupleScreen(): React.JSX.Element {
+// Home Screen Component (Combined Balance + Couple + Pending)
+function HomeScreen(): React.JSX.Element {
   const partner = {
     name: 'Yueyue',
     image: null, // Placeholder for avatar
@@ -71,44 +27,113 @@ function CoupleScreen(): React.JSX.Element {
     loveLanguages: ['Quality Time', 'Acts of Service', 'Physical Touch'],
   };
 
+  const balances = [
+    {id: '1', name: 'Cash', amount: 23, unit: '$', userOwes: true},
+    {id: '2', name: 'Foot Rubs', amount: 1, unit: 'rub', userOwes: false},
+  ];
+
+  const partnerNames = {me: 'You', them: 'Partner'};
+
+  // Dummy pending data
+  const pendingItems = [
+    {
+      id: '1',
+      type: 'infraction',
+      penaltyName: 'Window Dressing',
+      offender: 'Partner',
+      amount: 5,
+      unit: '$',
+    },
+    {
+      id: '2',
+      type: 'penalty',
+      penaltyName: 'Late to Dinner',
+      proposedBy: 'Partner',
+    },
+  ];
+
   return (
     <View style={screenStyles.container}>
-      <Text style={screenStyles.screenTitle}>Partner</Text>
+      <Text style={screenStyles.screenTitle}>Home</Text>
       <ScrollView style={screenStyles.scrollContent}>
-        {/* Partner Card */}
-        <View style={coupleStyles.partnerCard}>
-          {/* Avatar Placeholder */}
-          <View style={coupleStyles.avatarContainer}>
-            <View style={coupleStyles.avatar}>
-              <Text style={coupleStyles.avatarText}>
+        {/* Partner Info - Compact at top */}
+        <Pressable style={homeStyles.partnerCompact}>
+          <View style={homeStyles.partnerLeft}>
+            <View style={homeStyles.avatarSmall}>
+              <Text style={homeStyles.avatarSmallText}>
                 {partner.name.charAt(0)}
               </Text>
             </View>
-          </View>
-
-          {/* Name */}
-          <Text style={coupleStyles.partnerName}>{partner.name}</Text>
-
-          {/* Details Grid */}
-          <View style={coupleStyles.detailsGrid}>
-            <View style={coupleStyles.detailItem}>
-              <Text style={coupleStyles.detailLabel}>Birthday</Text>
-              <Text style={coupleStyles.detailValue}>{partner.birthday}</Text>
-            </View>
-            <View style={coupleStyles.detailItem}>
-              <Text style={coupleStyles.detailLabel}>MBTI</Text>
-              <Text style={coupleStyles.detailValue}>{partner.mbti}</Text>
+            <View style={homeStyles.partnerTextContainer}>
+              <Text style={homeStyles.partnerName}>{partner.name}</Text>
+              <Text style={homeStyles.partnerQuickStats}>
+                {partner.birthday} • {partner.mbti}
+              </Text>
             </View>
           </View>
-        </View>
+          <Ionicons name="chevron-forward" size={20} color="#999" />
+        </Pressable>
 
-        {/* Love Languages Section */}
-        <View style={coupleStyles.section}>
-          <Text style={coupleStyles.sectionTitle}>Love Languages</Text>
-          {partner.loveLanguages.map((language, index) => (
-            <View key={index} style={coupleStyles.languageItem}>
-              <View style={coupleStyles.languageDot} />
-              <Text style={coupleStyles.languageText}>{language}</Text>
+        {/* Pending Items - Needs Attention */}
+        {pendingItems.length > 0 && (
+          <View style={homeStyles.pendingSection}>
+            <Text style={homeStyles.sectionTitle}>⚠️ Needs Your Attention</Text>
+            {pendingItems.map(item => (
+              <Pressable key={item.id} style={homeStyles.pendingCard}>
+                <View style={homeStyles.pendingContent}>
+                  {item.type === 'infraction' ? (
+                    <>
+                      <Text style={homeStyles.pendingTitle}>
+                        Pending Infraction
+                      </Text>
+                      <Text style={homeStyles.pendingText}>
+                        {item.penaltyName} • {item.offender} • {item.amount}{' '}
+                        {item.unit}
+                      </Text>
+                    </>
+                  ) : (
+                    <>
+                      <Text style={homeStyles.pendingTitle}>
+                        New Penalty Proposal
+                      </Text>
+                      <Text style={homeStyles.pendingText}>
+                        "{item.penaltyName}" by {item.proposedBy}
+                      </Text>
+                    </>
+                  )}
+                </View>
+                <Ionicons name="chevron-forward" size={20} color="#f59e0b" />
+              </Pressable>
+            ))}
+          </View>
+        )}
+
+        {/* Balance Cards */}
+        <View style={homeStyles.balanceSection}>
+          <Text style={homeStyles.sectionTitle}>Balance</Text>
+          {balances.map(balance => (
+            <View key={balance.id} style={screenStyles.balanceCard}>
+              <View style={screenStyles.balanceRow}>
+                <Text style={screenStyles.balanceName}>{balance.name}</Text>
+                <View style={screenStyles.balanceAmountContainer}>
+                  <Text
+                    style={[
+                      screenStyles.balanceAmount,
+                      balance.userOwes
+                        ? screenStyles.balanceNegative
+                        : screenStyles.balancePositive,
+                    ]}
+                  >
+                    {balance.userOwes ? '-' : '+'}
+                    {balance.amount} {balance.unit}
+                  </Text>
+                </View>
+              </View>
+              <Text style={screenStyles.balanceSubtext}>
+                {balance.userOwes
+                  ? `You owe ${partnerNames.them}`
+                  : `${partnerNames.them} owes you`}
+              </Text>
             </View>
           ))}
         </View>
@@ -1186,10 +1211,8 @@ export default function App(): React.JSX.Element {
           tabBarIcon: ({focused, color, size}): React.ReactNode => {
             let iconName: keyof typeof Ionicons.glyphMap;
 
-            if (route.name === 'Balance') {
-              iconName = focused ? 'wallet' : 'wallet-outline';
-            } else if (route.name === 'Couple') {
-              iconName = focused ? 'heart' : 'heart-outline';
+            if (route.name === 'Home') {
+              iconName = focused ? 'home' : 'home-outline';
             } else if (route.name === 'Add') {
               // Center button - special styling
               return (
@@ -1218,8 +1241,7 @@ export default function App(): React.JSX.Element {
           },
         })}
       >
-        <Tab.Screen name="Balance" component={BalanceScreen} />
-        <Tab.Screen name="Couple" component={CoupleScreen} />
+        <Tab.Screen name="Home" component={HomeScreen} />
         <Tab.Screen
           name="Add"
           component={AddInfractionScreen}
@@ -2202,5 +2224,88 @@ const slideOverStyles = StyleSheet.create({
     color: '#666',
     fontSize: 16,
     fontWeight: '600',
+  },
+});
+
+// Home Screen Styles
+const homeStyles = StyleSheet.create({
+  partnerCompact: {
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderColor: '#e5e5e5',
+    borderRadius: 12,
+    borderWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 24,
+    padding: 12,
+  },
+  partnerLeft: {
+    alignItems: 'center',
+    flex: 1,
+    flexDirection: 'row',
+  },
+  avatarSmall: {
+    alignItems: 'center',
+    backgroundColor: '#000',
+    borderRadius: 24,
+    height: 48,
+    justifyContent: 'center',
+    width: 48,
+  },
+  avatarSmallText: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: '700',
+  },
+  partnerTextContainer: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  partnerName: {
+    color: '#000',
+    fontSize: 17,
+    fontWeight: '600',
+  },
+  partnerQuickStats: {
+    color: '#666',
+    fontSize: 13,
+    marginTop: 2,
+  },
+  pendingSection: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    color: '#000',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 12,
+  },
+  pendingCard: {
+    alignItems: 'center',
+    backgroundColor: '#fffbeb',
+    borderColor: '#fef3c7',
+    borderRadius: 12,
+    borderWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+    padding: 16,
+  },
+  pendingContent: {
+    flex: 1,
+  },
+  pendingTitle: {
+    color: '#000',
+    fontSize: 15,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  pendingText: {
+    color: '#666',
+    fontSize: 14,
+  },
+  balanceSection: {
+    marginBottom: 24,
   },
 });
